@@ -102,16 +102,16 @@ class Painet(BaseModel):
         input_P3, input_SPL3 = input['P3'], input['SPL3']
 
         if len(self.gpu_ids) > 0:
-            self.input_P1 = input_P1.cuda(self.gpu_ids[0], async=True)
-            self.input_BP1 = input_BP1.cuda(self.gpu_ids[0], async=True)
-            self.input_SPL1 = input_SPL1.cuda(self.gpu_ids[0], async=True)
-            self.input_P2 = input_P2.cuda(self.gpu_ids[0], async=True)
-            self.input_BP2 = input_BP2.cuda(self.gpu_ids[0], async=True)  
-            self.input_SPL2 = input_SPL2.cuda(self.gpu_ids[0], async=True)  
-            self.label_P2 = label_P2.cuda(self.gpu_ids[0], async=True)  
+            self.input_P1 = input_P1.cuda(self.gpu_ids[0], non_blocking=True)
+            self.input_BP1 = input_BP1.cuda(self.gpu_ids[0], non_blocking=True)
+            self.input_SPL1 = input_SPL1.cuda(self.gpu_ids[0], non_blocking=True)
+            self.input_P2 = input_P2.cuda(self.gpu_ids[0], non_blocking=True)
+            self.input_BP2 = input_BP2.cuda(self.gpu_ids[0], non_blocking=True)  
+            self.input_SPL2 = input_SPL2.cuda(self.gpu_ids[0], non_blocking=True)  
+            self.label_P2 = label_P2.cuda(self.gpu_ids[0], non_blocking=True)  
 
-            self.input_P3 = input_P3.cuda(self.gpu_ids[0], async=True)  
-            self.input_SPL3 = input_SPL3.cuda(self.gpu_ids[0], async=True)
+            self.input_P3 = input_P3.cuda(self.gpu_ids[0], non_blocking=True)  
+            self.input_SPL3 = input_SPL3.cuda(self.gpu_ids[0], non_blocking=True)
 
         self.image_paths=[]
         for i in range(self.input_P1.size(0)):
