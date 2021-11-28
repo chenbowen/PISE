@@ -71,11 +71,6 @@ class BaseDataset(data.Dataset):
             tmp = np.ones([256, 40, 3])*255
             P1_img = Image.fromarray(np.uint8(np.concatenate([tmp, np.array(P1_img), tmp],1)))
             P2_img = Image.fromarray(np.uint8(np.concatenate([tmp, np.array(P2_img), tmp],1)))
-        
-        #P1_img = F.resize(P1_img, self.load_size)
-        #P2_img = F.resize(P2_img, self.load_size)
-        #SPL1_img = F.resize(SPL1_img, (256,256),interpolation=0)
-        #SPL2_img = F.resize(SPL2_img, (256,256),interpolation=0)
 
         s1np = np.expand_dims(np.array(SPL1_img),-1)
         s2np = np.expand_dims(np.array(SPL2_img), -1)
