@@ -88,9 +88,6 @@ class BaseDataset(data.Dataset):
         BP1 = self.obtain_bone(P1_name, affine_matrix)
         P1 = self.trans(P1_img)
 
-
-
-
         angle, shift, scale = self.getRandomAffineParam()
         angle, shift, scale = angle*0.2, (shift[0]*0.5,shift[1]*0.5), 1 # Reduce the deform parameters of the generated image
         P2_img = F.affine(P2_img, angle=angle, translate=shift, scale=scale, shear=0, fillcolor=(128, 128, 128))
@@ -102,18 +99,13 @@ class BaseDataset(data.Dataset):
 
         SPL1_img = np.expand_dims(np.array(SPL1_img)[:,:,0],0)#[:,:,40:-40] # 1*256*176
         SPL2_img = np.expand_dims(np.array(SPL2_img)[:,:,0],0)#[:,:,40:-40]
-
-        #print(SPL1_img.shape)
-       # SPL1_img = SPL1_img.transpose(2,0)
-       # SPL2_img = SPL2_img.transpose(2,0)
+        
         _, h, w = SPL2_img.shape
-       # print(SPL2_img.shape,SPL1_img.shape)
         num_class = self.class_num
         tmp = torch.from_numpy(SPL2_img).view( -1).long()
         ones = torch.sparse.torch.eye(num_class)
         ones = ones.index_select(0, tmp)
         SPL2_onehot = ones.view([h,w, num_class])
-        #print(SPL2_onehot.shape)
         SPL2_onehot = SPL2_onehot.permute(2,0,1)
 
 
@@ -121,13 +113,9 @@ class BaseDataset(data.Dataset):
         ones = torch.sparse.torch.eye(num_class)
         ones = ones.index_select(0, tmp)
         SPL1_onehot = ones.view([h,w, num_class])
-        #print(SPL2_onehot.shape)
         SPL1_onehot = SPL1_onehot.permute(2,0,1)
 
-        #print(SPL1.shape)
         SPL2 = torch.from_numpy(SPL2_img).long()
-
-
         return {'P1': P1, 'BP1': BP1, 'P2': P2, 'BP2': BP2,'SPL1': SPL1_onehot, 'SPL2':SPL2_onehot, 'label_P2': SPL2,
                 'P1_path': P1_name, 'P2_path': P2_name}
 
@@ -141,7 +129,6 @@ class BaseDataset(data.Dataset):
         return pose  
 
    
-
     def __len__(self):
         return self.dataset_size
 

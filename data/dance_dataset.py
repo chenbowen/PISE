@@ -57,8 +57,6 @@ class DanceDataset(AnimationDataset):
             parser.set_defaults(n_frames_pre_load_test=6)
             parser.set_defaults(nThreads=1)
 
-
-
         parser.set_defaults(image_nc=3)
         parser.set_defaults(mask_nc=1)
         parser.set_defaults(display_winsize=256)

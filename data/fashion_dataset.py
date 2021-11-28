@@ -21,8 +21,6 @@ class FashionDataset(BaseDataset):
         parser.set_defaults(display_winsize=256)
         return parser
 
-
-
     def get_paths(self, opt):
         root = opt.dataroot
         phase = opt.phase
@@ -34,7 +32,6 @@ class FashionDataset(BaseDataset):
         bonesLst = os.path.join(root, 'fasion-annotation-%s.csv' %phase)#'fasion-annotation-%s.csv' % phase)
         par_dir = os.path.join(root, '%sSPL8' %phase)
         return image_dir, bonesLst, name_pairs, par_dir
-
 
     def init_categories(self, pairLst):
         pairs_file_train = pd.read_csv(pairLst)
