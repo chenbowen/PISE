@@ -220,51 +220,6 @@ class PoseGenerator(BaseNetwork):
         #img2code1 = feature_normalize(img2code)
         #loss_reg = F.mse_loss(img2code, parcode)
 
-        if False:
-            #  spatial transfer
-            #pose1code = self.posenc(par1)
-            #pose2code = self.posenc(par2)
-
-            
-
-            img1code = self.imgenc(img1)
-            
-            parcode1 = feature_normalize(parcode)
-            img1code1 = feature_normalize(img1code)
-            
-
-
-            if self.use_coordconv:
-                parcode1 = self.addcoords(parcode1)
-                img1code1 = self.addcoords(img1code1)
-
-            #par11 = F.interpolate(par1, size=parcode1.size()[2:], mode='nearest')
-            #par21 = F.interpolate(par2, size=img2code1.size()[2:], mode='nearest')
-            #parcode1 = self.layer(torch.cat((parcode1, par21),1))
-            #img1code1 = self.layer(torch.cat((img1code1, par11),1))
-
-            
-            gamma, beta = self.getMatrix(img1code)
-            batch_size, channel_size, h,w = gamma.shape
-            #img1code1 = feature_normalize(img1code)
-            att = self.computecorrespondence(parcode1, img1code1)
-            #print(att.shape)
-            gamma = gamma.view(batch_size, 1, -1)
-            beta = beta.view(batch_size, 1, -1)
-            #print(gamma.shape, att.shape)
-            imgamma = torch.bmm(gamma, att)
-            imbeta = torch.bmm(beta, att)
-
-
-            imgamma = imgamma.view(batch_size,1,h,w).contiguous()
-            imbeta = imbeta.view(batch_size,1,h,w).contiguous()
-
-            parcode = parcode*(1+imgamma)+imbeta
-            #print(imgamma)
-            
-            parcode = self.res1(parcode)
-
-
 
         parcode = self.dec(parcode)
         #print(parcode.shape)

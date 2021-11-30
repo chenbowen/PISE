@@ -1,5 +1,4 @@
 import sys
-import re
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -47,9 +46,8 @@ class ParsingNet(nn.Module):
         par = self.parout(x)
         mak = self.makout(x)
         
-        par = (par+1.)/2.
+        par = (par + 1.) / 2.
         
-
         return par, mak
 
 
@@ -88,7 +86,6 @@ class PoseGenerator(BaseNetwork):
 
         self.loss_fn = torch.nn.MSELoss()
 
-
     def addcoords(self, x):
         bs, _, h, w = x.shape
         xx_ones = torch.ones([bs, h, 1], dtype=x.dtype, device=x.device)
@@ -107,57 +104,25 @@ class PoseGenerator(BaseNetwork):
         rr_channel = torch.sqrt(torch.pow(xx_channel, 2) + torch.pow(yy_channel, 2))
         
         concat = torch.cat((x, xx_channel, yy_channel, rr_channel), dim=1)
-
         return concat
 
     def computecorrespondence(self, fea1, fea2, temperature=0.01,
-                detach_flag=False,
-                WTA_scale_weight=1,
-                alpha=1):
-        ## normalize the feature
-        ## borrow from https://github.com/microsoft/CoCosNet
-        batch_size = fea2.shape[0] 
-        channel_size = fea2.shape[1]
-        theta = self.theta(fea1)
-        if self.match_kernel == 1:
-            theta = theta.view(batch_size, channel_size, -1)  # 2*256*(feature_height*feature_width)
-        else:
-            theta = F.unfold(theta, kernel_size=self.match_kernel, padding=int(self.match_kernel // 2))
-
-        dim_mean = 1
-        theta = theta - theta.mean(dim=dim_mean, keepdim=True)
-        theta_norm = torch.norm(theta, 2, 1, keepdim=True) + sys.float_info.epsilon
-        theta = torch.div(theta, theta_norm)
-        theta_permute = theta.permute(0,2,1)
-
-        phi = self.phi(fea2)
-        if self.match_kernel == 1:
-            phi = phi.view(batch_size, channel_size, -1)  # 2*256*(feature_height*feature_width)
-        else:
-            phi = F.unfold(phi, kernel_size=self.match_kernel, padding=int(self.match_kernel // 2))
-        phi = phi - phi.mean(dim=dim_mean, keepdim=True)  # center the feature
-        phi_norm = torch.norm(phi, 2, 1, keepdim=True) + sys.float_info.epsilon
-        phi = torch.div(phi, phi_norm)
-
-        f = torch.matmul(theta_permute, phi)
-        if WTA_scale_weight == 1:
-            f_WTA = f
-        else:
-            f_WTA = WTA_scale.apply(f, WTA_scale_weight)
-        f_WTA = f_WTA / temperature
-        #print(f.shape)
+                detach_flag=False, WTA_scale_weight=1, alpha=1):
+        ## normalize the feature, https://github.com/microsoft/CoCosNet
+        def normalize(x):
+            x = F.unfold(x, kernel_size=self.match_kernel, padding=int(self.match_kernel // 2))
+            x = x - x.mean(dim=1, keepdim=True)
+            x_norm = torch.norm(x, 2, 1, keepdim=True) + sys.float_info.epsilon
+            x = torch.div(x, x_norm)
         
-        att = F.softmax(f_WTA.permute(0,2,1), dim=-1)
-        return att
-        
+        theta = normalize(self.theta(fea1)).permute(0, 2, 1)
+        phi = normalize(self.phi(fea2))
 
-
+        f_WTA = torch.matmul(theta, phi) / temperature
+        return F.softmax(f_WTA.permute(0,2,1), dim=-1)
 
     def forward(self, img1, img2, pose1, pose2, par1, par2):
         codes_vector, exist_vector, img1code = self.Zencoder(img1, par1)
-
-
-
         ######### my par   for image editing.
         '''
         parcode,mask = self.parnet(torch.cat((par1, pose1, pose2),1))
@@ -174,47 +139,41 @@ class PoseGenerator(BaseNetwork):
         SPL2_onehot = SPL2_onehot.permute(0, 3, 1, 2)
         par2 = SPL2_onehot
         '''
-        parcode,mask = self.parnet(torch.cat((par1, pose1, pose2),1))
+        parcode, mask = self.parnet(torch.cat((par1, pose1, pose2), 1))
         par2 = parcode
         
-        parcode = self.parenc(torch.cat((par1,par2,pose2, img1), 1))
+        parcode = self.parenc(torch.cat((par1, par2, pose2, img1), 1))
         
-        # instance transfer
-        for _ in range(1):
-            """share weights to normalize features use efb prograssively"""
-            parcode = self.efb(parcode, par2, codes_vector, exist_vector)
-            parcode = self.res(parcode)
+        # instance transfer, share weights to normalize features use efb prograssively
+        parcode = self.efb(parcode, par2, codes_vector, exist_vector)
+        parcode = self.res(parcode)
 
         ## regularization to let transformed code and target image code in the same feature space
-            
         img2code = self.imgenc(img2)
-        img2code1 = feature_normalize(img2code)
         loss_reg = F.mse_loss(img2code, parcode)
 
-        if True:
-            img1code = self.imgenc(img1)
-            
-            parcode1 = feature_normalize(parcode)
-            img1code1 = feature_normalize(img1code)
-            
-            if self.use_coordconv:
-                parcode1 = self.addcoords(parcode1)
-                img1code1 = self.addcoords(img1code1)
+        img1code = self.imgenc(img1)
+        
+        parcode1 = feature_normalize(parcode)
+        img1code1 = feature_normalize(img1code)
+        
+        if self.use_coordconv:
+            parcode1 = self.addcoords(parcode1)
+            img1code1 = self.addcoords(img1code1)
 
-            gamma, beta = self.getMatrix(img1code)
-            batch_size, channel_size, h,w = gamma.shape
-            att = self.computecorrespondence(parcode1, img1code1)
-            #print(att.shape)
-            gamma = gamma.view(batch_size, 1, -1)
-            beta = beta.view(batch_size, 1, -1)
-            imgamma = torch.bmm(gamma, att)
-            imbeta = torch.bmm(beta, att)
+        gamma, beta = self.getMatrix(img1code)
+        bs, _, h, w = gamma.shape
+        att = self.computecorrespondence(parcode1, img1code1)
+        gamma = gamma.view(bs, 1, -1)
+        beta = beta.view(bs, 1, -1)
+        imgamma = torch.bmm(gamma, att)
+        imbeta = torch.bmm(beta, att)
 
-            imgamma = imgamma.view(batch_size,1,h,w).contiguous()
-            imbeta = imbeta.view(batch_size,1,h,w).contiguous()
+        imgamma = imgamma.view(bs, 1, h, w).contiguous()
+        imbeta = imbeta.view(bs, 1, h, w).contiguous()
 
-            parcode = parcode*(1+imgamma)+imbeta 
-            parcode = self.res1(parcode)
+        parcode = parcode * (1 + imgamma) + imbeta 
+        parcode = self.res1(parcode)
 
         parcode = self.dec(parcode)
         return parcode, loss_reg, par2
