@@ -97,8 +97,8 @@ class Painet(BaseModel):
         # move to GPU and change data types
         self.input = input
         input_P1, input_BP1, input_SPL1 = input['P1'], input['BP1'], input['SPL1']
-        input_P2, input_BP2, input_SPL2, label_P2 = input['P2'], input['BP2'], input['SPL2'], input['label_P2']
-
+        input_P2, input_BP2 = input['P2'], input['BP2'], 
+        input_SPL2, label_P2 = input['SPL2'], input['label_P2']
         input_P3, input_SPL3 = input['P3'], input['SPL3']
 
         if len(self.gpu_ids) > 0:
@@ -133,22 +133,24 @@ class Painet(BaseModel):
         """Forward function used in test time"""
         #for i in range(0,20):  #style interpolation
         i = 0
-        if True: #texture_transfer
-            img_gen, self.loss_reg, self.parsav  = self.net_G(self.input_P1, self.input_P2, self.input_BP1, 
-                self.input_BP2, self.input_SPL1, self.input_SPL2, self.input_P3, self.input_SPL3, alpha=i/10.0)
+        #texture_transfer
+        img_gen, self.loss_reg, self.parsav  = self.net_G(self.input_P1, self.input_P2, self.input_BP1, 
+                                                        self.input_BP2, self.input_SPL1, self.input_SPL2, 
+                                                        self.input_P3, self.input_SPL3, alpha=i / 10.0)
 
-            self.save_results(img_gen, data_name='vis'+str(i))
-            if self.opt.save_input or self.opt.phase == 'val':
-                self.save_results(self.input_P1, data_name='ref')
-                self.save_results(self.input_P2, data_name='gt')
-                result = torch.cat([self.input_P1, img_gen, self.input_P2], 3)
-                self.save_results(result, data_name='all')
+        self.save_results(img_gen, data_name='vis'+str(i))
+        if self.opt.save_input or self.opt.phase == 'val':
+            self.save_results(self.input_P1, data_name='ref')
+            self.save_results(self.input_P2, data_name='gt')
+            result = torch.cat([self.input_P1, img_gen, self.input_P2], 3)
+            self.save_results(result, data_name='all')
                        
                 
 
     def forward(self):
         """Run forward processing to get the inputs"""
-        self.img_gen, self.loss_reg, self.parsav = self.net_G(self.input_P1, self.input_P2, self.input_BP1, self.input_BP2, self.input_SPL1, self.input_SPL2)
+        self.img_gen, self.loss_reg, self.parsav = self.net_G(self.input_P1, self.input_P2, self.input_BP1, 
+                                                              self.input_BP2, self.input_SPL1, self.input_SPL2)
       
     def backward_D_basic(self, netD, real, fake):
         """Calculate GAN loss for the discriminator"""

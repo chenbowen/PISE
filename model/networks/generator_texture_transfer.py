@@ -89,7 +89,7 @@ class PoseGenerator(BaseNetwork):
         norm_layer = get_norm_layer(norm_type=norm)
         nonlinearity = get_nonlinearity_layer(activation_type=activation)
         
-#        self.parnet = ParsingNet(8+18*2, 8)
+        # self.parnet = ParsingNet(8+18*2, 8)
 
         self.Zencoder = Zencoder(3, ngf)
 
@@ -137,93 +137,66 @@ class PoseGenerator(BaseNetwork):
         return concat
 
     def computecorrespondence(self, fea1, fea2, temperature=0.01,
-                detach_flag=False,
-                WTA_scale_weight=1,
-                alpha=1):
-        ## normalize the feature
-        ## borrow from https://github.com/microsoft/CoCosNet
-        batch_size = fea2.shape[0] 
-        channel_size = fea2.shape[1]
-        theta = self.theta(fea1)
-        if self.match_kernel == 1:
-            theta = theta.view(batch_size, channel_size, -1)  # 2*256*(feature_height*feature_width)
-        else:
-            theta = F.unfold(theta, kernel_size=self.match_kernel, padding=int(self.match_kernel // 2))
-
-        dim_mean = 1
-        theta = theta - theta.mean(dim=dim_mean, keepdim=True)
-        theta_norm = torch.norm(theta, 2, 1, keepdim=True) + sys.float_info.epsilon
-        theta = torch.div(theta, theta_norm)
-        theta_permute = theta.permute(0,2,1)
-
-        phi = self.phi(fea2)
-        if self.match_kernel == 1:
-            phi = phi.view(batch_size, channel_size, -1)  # 2*256*(feature_height*feature_width)
-        else:
-            phi = F.unfold(phi, kernel_size=self.match_kernel, padding=int(self.match_kernel // 2))
-        phi = phi - phi.mean(dim=dim_mean, keepdim=True)  # center the feature
-        phi_norm = torch.norm(phi, 2, 1, keepdim=True) + sys.float_info.epsilon
-        phi = torch.div(phi, phi_norm)
-
-        f = torch.matmul(theta_permute, phi)
-        if WTA_scale_weight == 1:
-            f_WTA = f
-        else:
-            f_WTA = WTA_scale.apply(f, WTA_scale_weight)
-        f_WTA = f_WTA / temperature
-        #print(f.shape)
+                detach_flag=False, WTA_scale_weight=1, alpha=1):
+        ## normalize the feature, https://github.com/microsoft/CoCosNet
+        def normalize(x):
+            x = F.unfold(x, kernel_size=self.match_kernel, padding=int(self.match_kernel // 2))
+            x = x - x.mean(dim=1, keepdim=True)
+            x_norm = torch.norm(x, 2, 1, keepdim=True) + sys.float_info.epsilon
+            x = torch.div(x, x_norm)
         
-        att = F.softmax(f_WTA.permute(0,2,1), dim=-1)
-        return att
+        theta = normalize(self.theta(fea1)).permute(0, 2, 1)
+        phi = normalize(self.phi(fea2))
+
+        f_WTA = torch.matmul(theta, phi) / temperature
+        return F.softmax(f_WTA.permute(0,2,1), dim=-1)
         
-
-
-
     def forward(self, img1, img2, pose1, pose2, par1, par2, img3, par3, alpha=0):
         codes_vector, exist_vector, img1code = self.Zencoder(img1, par1)
-        _codes_vector, _exist_vector, _ = self.Zencoder(img3, par3)
-        print(codes_vector.shape)
-        #codes_vector[0,2,:] = (1-alpha)*codes_vector[0,2,:]+alpha*_codes_vector[0,2,:]
-        #codes_vector[0,5,:] = (1-alpha)*codes_vector[0,3,:]+alpha*_codes_vector[0,5,:]
 
-
-
-        ######### my par   give logits more reasonable but cannot editing.
-        '''       
-        parcode,mask = self.parnet(torch.cat((par1, pose1, pose2),1))
-        parsav = parcode
-        par = torch.argmax(parcode, dim=1, keepdim=True)
-        bs, _, h, w = par.shape
-       # print(SPL2_img.shape,SPL1_img.shape)
-        num_class = 8
-        tmp = par.view( -1).long()
-        ones = torch.sparse.torch.eye(num_class).cuda() 
-        ones = ones.index_select(0, tmp)
-        SPL2_onehot = ones.view([bs, h,w, num_class])
-        #print(SPL2_onehot.shape)
-        SPL2_onehot = SPL2_onehot.permute(0, 3, 1, 2)
-        par2 = SPL2_onehot
-        '''       
-        ### for  parsing
-        #parcode = self.parenc(torch.cat((par1,par2, img1), 1)) #1017G.pth
-        parcode = self.parenc(torch.cat((par1,par2,pose2, img1), 1))
+        ### for parsing
+        parcode = self.parenc(torch.cat((par1, par2, pose2, img1), 1))
           
-        # instance transfer
-        for _ in range(1):
-            """share weights to normalize features use efb prograssively"""
-            parcode = self.efb(parcode, par2, codes_vector, exist_vector)
-            parcode = self.res(parcode)
+        # instance transfer, share weights to normalize features use efb prograssively
+        parcode = self.efb(parcode, par2, codes_vector, exist_vector)
+        parcode = self.res(parcode)
 
-        ## regularization to let transformed code and target image code in the same feature space
-            
-        #img2code = self.imgenc(img2)
-        #img2code1 = feature_normalize(img2code)
-        #loss_reg = F.mse_loss(img2code, parcode)
+        pred_img = self.dec(parcode)
+        return pred_img, 0, par2
+    
+    # old
+    # def forward(self, img1, img2, pose1, pose2, par1, par2, img3, par3, alpha=0):
+    #     codes_vector, exist_vector, img1code = self.Zencoder(img1, par1)
+    #     _codes_vector, _exist_vector, _ = self.Zencoder(img3, par3)
+    #     print(codes_vector.shape)
+    #     #codes_vector[0,2,:] = (1-alpha)*codes_vector[0,2,:]+alpha*_codes_vector[0,2,:]
+    #     #codes_vector[0,5,:] = (1-alpha)*codes_vector[0,3,:]+alpha*_codes_vector[0,5,:]
 
+    #     ######### my par   give logits more reasonable but cannot editing.
+    #     '''       
+    #     parcode,mask = self.parnet(torch.cat((par1, pose1, pose2),1))
+    #     parsav = parcode
+    #     par = torch.argmax(parcode, dim=1, keepdim=True)
+    #     bs, _, h, w = par.shape
+    #    # print(SPL2_img.shape,SPL1_img.shape)
+    #     num_class = 8
+    #     tmp = par.view( -1).long()
+    #     ones = torch.sparse.torch.eye(num_class).cuda() 
+    #     ones = ones.index_select(0, tmp)
+    #     SPL2_onehot = ones.view([bs, h,w, num_class])
+    #     #print(SPL2_onehot.shape)
+    #     SPL2_onehot = SPL2_onehot.permute(0, 3, 1, 2)
+    #     par2 = SPL2_onehot
+    #     '''       
+    #     ### for  parsing
+    #     parcode = self.parenc(torch.cat((par1, par2, pose2, img1), 1))
+          
+    #     # instance transfer, share weights to normalize features use efb prograssively
+    #     parcode = self.efb(parcode, par2, codes_vector, exist_vector)
+    #     parcode = self.res(parcode)
 
-        parcode = self.dec(parcode)
-        #print(parcode.shape)
-        return parcode, 0, par2
+    #     pred_img = self.dec(parcode)
+    #     return pred_img, 0, par2
 
 
 

@@ -139,8 +139,7 @@ class PoseGenerator(BaseNetwork):
         SPL2_onehot = SPL2_onehot.permute(0, 3, 1, 2)
         par2 = SPL2_onehot
         '''
-        parcode, mask = self.parnet(torch.cat((par1, pose1, pose2), 1))
-        par2 = parcode
+        par2, mask = self.parnet(torch.cat((par1, pose1, pose2), 1))
         
         parcode = self.parenc(torch.cat((par1, par2, pose2, img1), 1))
         
@@ -175,8 +174,8 @@ class PoseGenerator(BaseNetwork):
         parcode = parcode * (1 + imgamma) + imbeta 
         parcode = self.res1(parcode)
 
-        parcode = self.dec(parcode)
-        return parcode, loss_reg, par2
+        pred_img = self.dec(parcode)
+        return pred_img, loss_reg, par2
 
 
 

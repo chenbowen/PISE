@@ -126,7 +126,8 @@ class Painet(BaseModel):
 
     def test(self):
         """Forward function used in test time"""
-        img_gen, self.loss_reg, self.parsav  = self.net_G(self.input_P1, self.input_P2, self.input_BP1, self.input_BP2, self.input_SPL1, self.input_SPL2)
+        img_gen, self.loss_reg, self.parsav  = self.net_G(self.input_P1, self.input_P2, self.input_BP1, 
+                                                          self.input_BP2, self.input_SPL1, self.input_SPL2)
         ## test flow ##
 
         self.save_results(img_gen, data_name='vis')
@@ -140,7 +141,8 @@ class Painet(BaseModel):
 
     def forward(self):
         """Run forward processing to get the inputs"""
-        self.img_gen, self.loss_reg, self.parsav = self.net_G(self.input_P1, self.input_P2, self.input_BP1, self.input_BP2, self.input_SPL1, self.input_SPL2)
+        self.img_gen, self.loss_reg, self.parsav = self.net_G(self.input_P1, self.input_P2, self.input_BP1, 
+                                                              self.input_BP2, self.input_SPL1, self.input_SPL2)
       
     def backward_D_basic(self, netD, real, fake):
         """Calculate GAN loss for the discriminator"""
