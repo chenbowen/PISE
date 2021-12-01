@@ -152,13 +152,12 @@ class PoseGenerator(BaseNetwork):
         return F.softmax(f_WTA.permute(0,2,1), dim=-1)
         
     def forward(self, img1, img2, pose1, pose2, par1, par2, img3, par3, alpha=0):
-        codes_vector, exist_vector, img1code = self.Zencoder(img1, par1)
+        style_codes, exist_vector, img1code = self.Zencoder(img1, par1)
 
-        ### for parsing
-        parcode = self.parenc(torch.cat((par1, par2, pose2, img1), 1))
+        feature = self.parenc(torch.cat((par1, par2, pose2, img1), 1))
           
         # instance transfer, share weights to normalize features use efb prograssively
-        parcode = self.efb(parcode, par2, codes_vector, exist_vector)
+        parcode = self.efb(feature, par2, style_codes, exist_vector)
         parcode = self.res(parcode)
 
         pred_img = self.dec(parcode)

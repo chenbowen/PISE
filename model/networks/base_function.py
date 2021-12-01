@@ -456,7 +456,6 @@ class Zencoder(nn.Module):
 
         codes = self.get_code(out)
 
-
         segmap = F.interpolate(seg, size=codes.size()[2:], mode='nearest')
 
         bs = codes.shape[0]
@@ -473,19 +472,16 @@ class Zencoder(nn.Module):
         for i in range(bs):
             for j in range(s_size):
                 component_mask_area = torch.sum(segmap.bool()[i, j])
-   #             tmpcom = torch.zeros((f_size, h_size, w_size), dtype=codes.dtype, device=codes.device)
 
                 if component_mask_area > 0:
-                    codes_component_feature = codes[i].masked_select(segmap.bool()[i, j]).reshape(f_size,  component_mask_area).mean(1)
+                    codes_component_feature = codes[i].masked_select(segmap.bool()[i, j])\
+                        .reshape(f_size, component_mask_area).mean(1)
                     
-   #                 t = codes_component_feature.masked_scatter_(segmap.bool()[i, j],tmpcom )
-   #                 print(t.shape)
                     codes_vector[i][j] = codes_component_feature
                     exist_vector[i][j] = 1
-                    # codes_avg[i].masked_scatter_(segmap.bool()[i, j], codes_component_mu)
-            tmpmean, tmpstd = calc_mean_std(codes[i].reshape(1,codes[i].shape[0], codes[i].shape[1],codes[i].shape[2]))
+            tmpmean, _ = calc_mean_std(codes[i].reshape(1, codes[i].shape[0], 
+                                                             codes[i].shape[1], codes[i].shape[2]))
             codes_vector[i][s_size] = tmpmean.squeeze()
-
 
         return codes_vector, exist_vector, out
 
@@ -570,39 +566,16 @@ class EFB(nn.Module):
         self.style_length = style_length
         self.blending_gamma = nn.Parameter(torch.zeros(1), requires_grad=True)
         self.blending_beta = nn.Parameter(torch.zeros(1), requires_grad=True)
-        #self.Spade = SPADE(fin, 10)
-# to do     for unexisted seg in condition image, use mlp or conv to predict the seg class in generated image
-#        self.predict = nn.Conv2d(512, 
-#        self.predict = nn.Conv2d(fin, fin, kernel_size=3, padding=1)
-        param_free_norm_type = 'instance'
-        ks = int(3)
-        pw = ks // 2
-
-        if param_free_norm_type == 'instance':
-            self.param_free_norm = nn.InstanceNorm2d(norm_nc, affine=False)
-        elif param_free_norm_type == 'syncbatch':
-            self.param_free_norm = SynchronizedBatchNorm2d(norm_nc, affine=False)
-        elif param_free_norm_type == 'batch':
-            self.param_free_norm = nn.BatchNorm2d(norm_nc, affine=False)
-        else:
-            raise ValueError('%s is not a recognized param-free norm type in SPADE'
-                             % param_free_norm_type)
-
-        # The dimension of the intermediate embedding space. Yes, hardcoded.
-
-
+        self.param_free_norm = nn.InstanceNorm2d(norm_nc, affine=False)
         self.create_gamma_beta_fc_layers()
 
-        self.conv_gamma = nn.Conv2d(self.style_length, norm_nc, kernel_size=ks, padding=pw)
-        self.conv_beta = nn.Conv2d(self.style_length, norm_nc, kernel_size=ks, padding=pw)
+        self.conv_gamma = nn.Conv2d(self.style_length, norm_nc, kernel_size=3, padding=1)
+        self.conv_beta = nn.Conv2d(self.style_length, norm_nc, kernel_size=3, padding=1)
         
     def forward(self, x, segmap, style_codes, exist_codes):
-#        print('ebf x: ', x.shape)
         segmap = F.interpolate(segmap, size=x.size()[2:], mode='nearest')
         norm1 = self.norm(x)
-        [b_size, f_size, h_size, w_size] = norm1.shape
-#        print('style_codes shape', style_codes.shape)
-#        print(segmap.shape) 
+        b_size, f_size, h_size, w_size = norm1.shape
         middle_avg = torch.zeros((b_size, self.style_length, h_size, w_size), device=norm1.device)
         for i in range(b_size):
             for j in range(segmap.shape[1]):
@@ -610,44 +583,27 @@ class EFB(nn.Module):
 
                 if component_mask_area > 0:
                     if exist_codes[i][j] == 1:
-                       # print(style_codes[i][j].shape)
                         middle_mu = F.relu(self.__getattr__('fc_mu' + str(j))(style_codes[i][j]))
-                        
-                        component_mu = middle_mu.reshape(self.style_length, 1).expand(self.style_length, component_mask_area)
-
+                        component_mu = middle_mu.reshape(self.style_length, 1)\
+                            .expand(self.style_length, component_mask_area)
                         middle_avg[i].masked_scatter_(segmap.bool()[i, j], component_mu)
                     else:
                         middle_mu = F.relu(self.__getattr__('fc_mu' + str(j))(style_codes[i][segmap.shape[1]]))
-                        component_mu = middle_mu.reshape(self.style_length, 1).expand(self.style_length, component_mask_area)
-
+                        component_mu = middle_mu.reshape(self.style_length, 1)\
+                            .expand(self.style_length, component_mask_area)
                         middle_avg[i].masked_scatter_(segmap.bool()[i, j], component_mu)
                 else:
                     middle_mu = F.relu(self.__getattr__('fc_mu' + str(j))(style_codes[i].mean(0,keepdim=False)))
-                    component_mu = middle_mu.reshape(self.style_length, 1).expand(self.style_length, component_mask_area)
+                    component_mu = middle_mu.reshape(self.style_length, 1)\
+                        .expand(self.style_length, component_mask_area)
                     middle_avg[i].masked_scatter_(segmap.bool()[i, j], component_mu)
 
         gamma_avg = self.conv_gamma(middle_avg)
         beta_avg = self.conv_beta(middle_avg)
-
-
-            #gamma_spade, beta_spade = self.Spade(segmap)
-
-            #gamma_alpha = F.sigmoid(self.blending_gamma)
-            #beta_alpha = F.sigmoid(self.blending_beta)
-
-        gamma_final = gamma_avg #+ (1 - gamma_alpha) * gamma_spade
-        beta_final =  beta_avg #+ (1 - beta_alpha) * beta_spade
-        out = norm1 * (1 + gamma_final) + beta_final
-
-
+        out = norm1 * (1 + gamma_avg) + beta_avg
         return out
 
     def create_gamma_beta_fc_layers(self):
-
-
-        ###################  These codes should be replaced with torch.nn.ModuleList
-            ###################  replaced by conv 1d 
-
         style_length = self.style_length
 
         self.fc_mu0 = nn.Linear(style_length, style_length)
@@ -658,8 +614,6 @@ class EFB(nn.Module):
         self.fc_mu5 = nn.Linear(style_length, style_length)
         self.fc_mu6 = nn.Linear(style_length, style_length)
         self.fc_mu7 = nn.Linear(style_length, style_length)
-        #self.fc_mu8 = nn.Linear(style_length, style_length)
-        #self.fc_mu9 = nn.Linear(style_length, style_length)
 
 
 class Gated_conv(nn.Module):
