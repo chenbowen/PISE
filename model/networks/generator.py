@@ -162,14 +162,11 @@ class PoseGenerator(BaseNetwork):
 
         gamma, beta = self.getMatrix(img1code)
         bs, _, h, w = gamma.shape
-        att = self.computecorrespondence(parcode1, img1code1)
         gamma = gamma.view(bs, 1, -1)
         beta = beta.view(bs, 1, -1)
-        imgamma = torch.bmm(gamma, att)
-        imbeta = torch.bmm(beta, att)
-
-        imgamma = imgamma.view(bs, 1, h, w).contiguous()
-        imbeta = imbeta.view(bs, 1, h, w).contiguous()
+        att = self.computecorrespondence(parcode1, img1code1)
+        imgamma = torch.bmm(gamma, att).view(bs, 1, h, w).contiguous()
+        imbeta = torch.bmm(beta, att).view(bs, 1, h, w).contiguous()
 
         parcode = parcode * (1 + imgamma) + imbeta 
         parcode = self.res1(parcode)
