@@ -89,7 +89,7 @@ class BaseDataset(data.Dataset):
         P1 = self.trans(P1_img)
 
         angle, shift, scale = self.getRandomAffineParam()
-        angle, shift, scale = angle*0.2, (shift[0]*0.5,shift[1]*0.5), 1 # Reduce the deform parameters of the generated image
+        angle, shift, scale = angle*0.2, (shift[0]*0.5, shift[1]*0.5), 1 # Reduce the deform parameters of the generated image
         P2_img = F.affine(P2_img, angle=angle, translate=shift, scale=scale, shear=0, fillcolor=(128, 128, 128))
         SPL2_img = F.affine(SPL2_img, angle=angle, translate=shift, scale=scale, shear=0, fillcolor=(128, 128, 128))
         center = (P1_img.size[0] * 0.5 + 0.5, P1_img.size[1] * 0.5 + 0.5)
@@ -102,7 +102,7 @@ class BaseDataset(data.Dataset):
         
         _, h, w = SPL2_img.shape
         num_class = self.class_num
-        tmp = torch.from_numpy(SPL2_img).view( -1).long()
+        tmp = torch.from_numpy(SPL2_img).view(-1).long()
         ones = torch.sparse.torch.eye(num_class)
         ones = ones.index_select(0, tmp)
         SPL2_onehot = ones.view([h,w, num_class])

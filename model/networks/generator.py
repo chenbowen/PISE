@@ -114,6 +114,7 @@ class PoseGenerator(BaseNetwork):
             x = x - x.mean(dim=1, keepdim=True)
             x_norm = torch.norm(x, 2, 1, keepdim=True) + sys.float_info.epsilon
             x = torch.div(x, x_norm)
+            return x
         
         theta = normalize(self.theta(fea1)).permute(0, 2, 1)
         phi = normalize(self.phi(fea2))

@@ -144,13 +144,14 @@ class PoseGenerator(BaseNetwork):
             x = x - x.mean(dim=1, keepdim=True)
             x_norm = torch.norm(x, 2, 1, keepdim=True) + sys.float_info.epsilon
             x = torch.div(x, x_norm)
+            return x
         
         theta = normalize(self.theta(fea1)).permute(0, 2, 1)
         phi = normalize(self.phi(fea2))
 
         f_WTA = torch.matmul(theta, phi) / temperature
         return F.softmax(f_WTA.permute(0,2,1), dim=-1)
-        
+
     def forward(self, img1, img2, pose1, pose2, par1, par2, img3, par3, alpha=0):
         style_codes, exist_vector, img1code = self.Zencoder(img1, par1)
 
