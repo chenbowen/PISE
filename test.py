@@ -18,6 +18,6 @@ if __name__=='__main__':
     model = create_model(opt)
 
     with torch.no_grad():
-        for i, data in enumerate(dataset):
+        for i, data in enumerate(dataset): #TODO:
             model.set_input(data)
             model.test()

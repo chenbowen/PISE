@@ -152,7 +152,7 @@ class PoseGenerator(BaseNetwork):
         f_WTA = torch.matmul(theta, phi) / temperature
         return F.softmax(f_WTA.permute(0,2,1), dim=-1)
 
-    def forward(self, img1, img2, pose1, pose2, par1, par2, img3, par3, alpha=0):
+    def forward(self, img1, img2, pose1, pose2, par1, par2):
         style_codes, exist_vector, img1code = self.Zencoder(img1, par1)
 
         feature = self.parenc(torch.cat((par1, par2, pose2, img1), 1))
@@ -164,43 +164,6 @@ class PoseGenerator(BaseNetwork):
         pred_img = self.dec(parcode)
         return pred_img, 0, par2
     
-    # old
-    # def forward(self, img1, img2, pose1, pose2, par1, par2, img3, par3, alpha=0):
-    #     codes_vector, exist_vector, img1code = self.Zencoder(img1, par1)
-    #     _codes_vector, _exist_vector, _ = self.Zencoder(img3, par3)
-    #     print(codes_vector.shape)
-    #     #codes_vector[0,2,:] = (1-alpha)*codes_vector[0,2,:]+alpha*_codes_vector[0,2,:]
-    #     #codes_vector[0,5,:] = (1-alpha)*codes_vector[0,3,:]+alpha*_codes_vector[0,5,:]
-
-    #     ######### my par   give logits more reasonable but cannot editing.
-    #     '''       
-    #     parcode,mask = self.parnet(torch.cat((par1, pose1, pose2),1))
-    #     parsav = parcode
-    #     par = torch.argmax(parcode, dim=1, keepdim=True)
-    #     bs, _, h, w = par.shape
-    #    # print(SPL2_img.shape,SPL1_img.shape)
-    #     num_class = 8
-    #     tmp = par.view( -1).long()
-    #     ones = torch.sparse.torch.eye(num_class).cuda() 
-    #     ones = ones.index_select(0, tmp)
-    #     SPL2_onehot = ones.view([bs, h,w, num_class])
-    #     #print(SPL2_onehot.shape)
-    #     SPL2_onehot = SPL2_onehot.permute(0, 3, 1, 2)
-    #     par2 = SPL2_onehot
-    #     '''       
-    #     ### for  parsing
-    #     parcode = self.parenc(torch.cat((par1, par2, pose2, img1), 1))
-          
-    #     # instance transfer, share weights to normalize features use efb prograssively
-    #     parcode = self.efb(parcode, par2, codes_vector, exist_vector)
-    #     parcode = self.res(parcode)
-
-    #     pred_img = self.dec(parcode)
-    #     return pred_img, 0, par2
-
-
-
-
 
 
 

@@ -99,7 +99,6 @@ class Painet(BaseModel):
         input_P1, input_BP1, input_SPL1 = input['P1'], input['BP1'], input['SPL1']
         input_P2, input_BP2 = input['P2'], input['BP2'], 
         input_SPL2, label_P2 = input['SPL2'], input['label_P2']
-        input_P3, input_SPL3 = input['P3'], input['SPL3']
 
         if len(self.gpu_ids) > 0:
             self.input_P1 = input_P1.cuda(self.gpu_ids[0], non_blocking=True)
@@ -109,10 +108,6 @@ class Painet(BaseModel):
             self.input_BP2 = input_BP2.cuda(self.gpu_ids[0], non_blocking=True)  
             self.input_SPL2 = input_SPL2.cuda(self.gpu_ids[0], non_blocking=True)  
             self.label_P2 = label_P2.cuda(self.gpu_ids[0], non_blocking=True)  
-
-            self.input_P3 = input_P3.cuda(self.gpu_ids[0], non_blocking=True)  
-            self.input_SPL3 = input_SPL3.cuda(self.gpu_ids[0], non_blocking=True)
-
         self.image_paths=[]
         for i in range(self.input_P1.size(0)):
             self.image_paths.append(os.path.splitext(input['P1_path'][i])[0] + '_' + input['P2_path'][i])
@@ -135,8 +130,7 @@ class Painet(BaseModel):
         i = 0
         #texture_transfer
         img_gen, self.loss_reg, self.parsav  = self.net_G(self.input_P1, self.input_P2, self.input_BP1, 
-                                                        self.input_BP2, self.input_SPL1, self.input_SPL2, 
-                                                        self.input_P3, self.input_SPL3, alpha=i / 10.0)
+                                                        self.input_BP2, self.input_SPL1, self.input_SPL2)
 
         self.save_results(img_gen, data_name='vis'+str(i))
         if self.opt.save_input or self.opt.phase == 'val':
