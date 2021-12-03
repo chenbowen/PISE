@@ -29,14 +29,14 @@ def make_dataset(dir):
     train_f = open('./fashion_data/train.lst', 'r')
     for lines in train_f:
         lines = lines.strip()
-        if lines.endswith('.jpg'):
+        if lines.endswith('.jpg') or lines.endswith('.png'):
             train_images.append(lines)
 
     test_images = []
     test_f = open('./fashion_data/test.lst', 'r')
     for lines in test_f:
         lines = lines.strip()
-        if lines.endswith('.jpg'):
+        if lines.endswith('.jpg') or lines.endswith('.png'):
             test_images.append(lines)
 
     print(train_images, test_images)
