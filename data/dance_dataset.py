@@ -299,7 +299,7 @@ class DanceDataset(AnimationDataset):
     def load_parsing(self, A_path_p):
         A_par = Image.open(A_path_p)
         fillWhiteColor = True if self.opt.sub_dataset=='fashion' else False
-        Ai = self.transform_image(A_img, self.load_size, affine=self.affine_param, fillcolor=(128, 128, 128))
+        Ai = self.transform_image(A_img, self.load_size, affine=self.affine_param, fill=(128, 128, 128))
         return Ai
         
     def load_mask(self, C_path):

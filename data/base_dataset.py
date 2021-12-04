@@ -81,8 +81,8 @@ class BaseDataset(data.Dataset):
 
 
         angle, shift, scale = self.getRandomAffineParam()
-        P1_img = F.affine(P1_img, angle=angle, translate=shift, scale=scale, shear=0, fillcolor=(128, 128, 128))
-        SPL1_img = F.affine(SPL1_img, angle=angle, translate=shift, scale=scale, shear=0, fillcolor=(128, 128, 128))
+        P1_img = F.affine(P1_img, angle=angle, translate=shift, scale=scale, shear=0, fill=(128, 128, 128))
+        SPL1_img = F.affine(SPL1_img, angle=angle, translate=shift, scale=scale, shear=0, fill=(128, 128, 128))
         center = (P1_img.size[0] * 0.5 + 0.5, P1_img.size[1] * 0.5 + 0.5)
         affine_matrix = self.get_affine_matrix(center=center, angle=angle, translate=shift, scale=scale, shear=0)
         BP1 = self.obtain_bone(P1_name, affine_matrix)
@@ -90,8 +90,8 @@ class BaseDataset(data.Dataset):
 
         angle, shift, scale = self.getRandomAffineParam()
         angle, shift, scale = angle*0.2, (shift[0]*0.5, shift[1]*0.5), 1 # Reduce the deform parameters of the generated image
-        P2_img = F.affine(P2_img, angle=angle, translate=shift, scale=scale, shear=0, fillcolor=(128, 128, 128))
-        SPL2_img = F.affine(SPL2_img, angle=angle, translate=shift, scale=scale, shear=0, fillcolor=(128, 128, 128))
+        P2_img = F.affine(P2_img, angle=angle, translate=shift, scale=scale, shear=0, fill=(128, 128, 128))
+        SPL2_img = F.affine(SPL2_img, angle=angle, translate=shift, scale=scale, shear=0, fill=(128, 128, 128))
         center = (P1_img.size[0] * 0.5 + 0.5, P1_img.size[1] * 0.5 + 0.5)
         affine_matrix = self.get_affine_matrix(center=center, angle=angle, translate=shift, scale=scale, shear=0)
         BP2 = self.obtain_bone(P2_name, affine_matrix)
