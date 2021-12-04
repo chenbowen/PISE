@@ -34,11 +34,10 @@ class Painet(BaseModel):
 
         parser.add_argument('--use_spect_g', action='store_false', help="whether use spectral normalization in generator")
         parser.add_argument('--use_spect_d', action='store_false', help="whether use spectral normalization in discriminator")
-        parser.add_argument('--save_input', action='store_false', help="whether save the input images when testing")
+        parser.add_argument('--save_input', action='store_true', help="whether save the input images when testing")
 
         parser.set_defaults(use_spect_g=False)
         parser.set_defaults(use_spect_d=True)
-        parser.set_defaults(save_input=False)
 
         return parser
 
