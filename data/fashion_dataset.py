@@ -11,6 +11,7 @@ class FashionDataset(BaseDataset):
     @staticmethod
     def modify_commandline_options(parser, is_train):
         parser = BaseDataset.modify_commandline_options(parser, is_train)
+        parser.add_argument('--test_pairs', type=str, default="fasion-pairs-test.csv")
         if is_train:
             parser.set_defaults(load_size=256)
         else:
@@ -25,6 +26,9 @@ class FashionDataset(BaseDataset):
         root = opt.dataroot
         phase = opt.phase
         pairLst = os.path.join(root, 'fasion-pairs-%s.csv' %phase)
+        if phase == "test":
+            pairLst = os.path.join(root, opt.test_pairs)
+            print("test using", pairLst)
         name_pairs = self.init_categories(pairLst)
         
         image_dir = os.path.join(root, '%s' % phase)
