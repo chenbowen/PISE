@@ -128,11 +128,11 @@ class Painet(BaseModel):
         img_gen, self.loss_reg, self.parsav  = self.net_G(self.input_P1, self.input_P2, self.input_BP1, 
                                                           self.input_BP2, self.input_SPL1, self.input_SPL2)
         ## test flow ##
-
-        self.save_results(img_gen, data_name='vis')
+        # TODO:
+        # self.save_results(img_gen, data_name='vis')
         if self.opt.save_input or self.opt.phase == 'val':
-            self.save_results(self.input_P1, data_name='ref')
-            self.save_results(self.input_P2, data_name='gt')
+            # self.save_results(self.input_P1, data_name='ref')
+            # self.save_results(self.input_P2, data_name='gt')
             result = torch.cat([self.input_P1, img_gen, self.input_P2], 3)
             self.save_results(result, data_name='all')
                        
