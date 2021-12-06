@@ -1,4 +1,3 @@
-from os import kill
 import os.path
 from data.base_dataset import BaseDataset
 from data.image_folder import make_dataset
@@ -6,7 +5,6 @@ import pandas as pd
 from util import pose_utils
 import numpy as np
 import torch
-import random
 
 class FashionDataset(BaseDataset):
 
@@ -39,35 +37,15 @@ class FashionDataset(BaseDataset):
         return image_dir, bonesLst, name_pairs, par_dir
 
     def init_categories(self, pairLst):
-        size = 10000
-        appearances = {}
-        train_f = open('./fashion_data/train.lst', 'r')
-        for line in train_f:
-            line = line.strip()
-            if line.endswith('.jpg') or line.endswith('.png'):
-                k = line.split("_")[:3].join("_")
-                appearances[k].append(line)
-        keys = list(appearances.keys())
+        pairs_file_train = pd.read_csv(pairLst)
+        size = len(pairs_file_train)
         pairs = []
-        print('Random sampling data pairs ...')  
+        print('Loading data pairs ...')
         for i in range(size):
-            k = random.choice(keys)
-            pair = random.sample(appearances[k], 2)
+            pair = [pairs_file_train.iloc[i]['from'], pairs_file_train.iloc[i]['to']]
             pairs.append(pair)
-            if i < 20:
-                print(pair)
-        print('Done: Random sampling data pairs...') 
-        
 
-        # pairs_file_train = pd.read_csv(pairLst)
-        # size = len(pairs_file_train)
-        # pairs = []
-        # print('Loading data pairs ...')
-        # for i in range(size):
-        #     pair = [pairs_file_train.iloc[i]['from'], pairs_file_train.iloc[i]['to']]
-        #     pairs.append(pair)
-
-        # print('Loading data pairs finished ...')  
+        print('Loading data pairs finished ...')  
         return pairs    
 
     def name(self):

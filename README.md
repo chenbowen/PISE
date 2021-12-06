@@ -2,6 +2,26 @@
 
 The code for our CVPR paper [PISE: Person Image Synthesis and Editing with Decoupled GAN](https://arxiv.org/abs/2103.04023), [Project Page](http://cic.tju.edu.cn/faculty/likun/projects/PISE/index.html), [supp.](http://cic.tju.edu.cn/faculty/likun/projects/PISE/assets/supp.pdf)
 
+# Our Contributions
+- ## Added features:
+   - ### Training on iPER dataset (https://svip-lab.github.io/dataset/iPER_dataset.html)
+   - ### Online training pairs sampling 
+       - #### Random sampling trianing pairs instead of loading fixed pairs from predetermined training csv files. For any sampled training pair (A, B), the appearances are the same (actor & cloth). However in iPER, each actor with same cloth has two different videos: random pose & fixed pose with varying azimuthal angles. Therefore, a training pair can be sampled from two different videos.
+   - ### Testing on iPER dataset
+   - ### Testing with different csv pair files, saving results automatically with corresponding names
+   - ### Offline reorganizing datasets (deepfashion, iPER) for faster data loading 
+   - ### Saving visualization triple (ref, output, gt)
+   - ### Support training with png images
+- ## Resolved issues from original code:
+   - ### deprecated `fill` argument in F.affine()
+   - ### deprecated usage of `.cuda(, async=True)`
+   - ### incorrect `--store_input` default value for visualization
+   - ### incorrect loading pretrained vgg19 from author's local machine
+
+- ## Code cleaning
+   - ### Cleaned over 130+ lines of redundent or unnecessary code
+   - ### Renaming some variable names for better readability
+
 # Requirement
 
 ```
