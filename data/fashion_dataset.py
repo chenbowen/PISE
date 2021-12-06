@@ -46,7 +46,7 @@ class FashionDataset(BaseDataset):
         for line in train_f:
             line = line.strip()
             if line.endswith('.jpg') or line.endswith('.png'):
-                k = "_".join(line.split("_")[:3])
+                k = "_".join(line.split("_")[:2])
                 appearances[k].append(line)
         keys = list(appearances.keys())
         pairs = []
