@@ -1,5 +1,6 @@
 from os import kill
 import os.path
+from collections import defaultdict
 from data.base_dataset import BaseDataset
 from data.image_folder import make_dataset
 import pandas as pd
@@ -40,7 +41,7 @@ class FashionDataset(BaseDataset):
 
     def init_categories(self, pairLst):
         size = 10000
-        appearances = {}
+        appearances = defaultdict(list)
         train_f = open('./fashion_data/train.lst', 'r')
         for line in train_f:
             line = line.strip()
