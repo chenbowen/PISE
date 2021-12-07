@@ -68,8 +68,7 @@ class BaseDataset(data.Dataset):
         if os.path.exists(SPL2_path):
             SPL2_img = Image.open(SPL2_path)#.crop(regions)
         else:
-            print("load_size", self.load_size)
-            SPL2_img = Image.new('RGB', (self.load_size, self.load_size))
+            SPL2_img = Image.new('RGB', self.load_size)
         
         if np.array(P1_img).shape[1]==176:
             tmp = np.ones([256, 40, 3])*255
