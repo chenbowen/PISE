@@ -1,5 +1,4 @@
 import os
-from torch._C import int8
 import torch.utils.data as data
 from PIL import Image
 import torchvision.transforms as transforms
