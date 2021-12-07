@@ -1,6 +1,6 @@
 import os
 from os import listdir
-from os.path import join, dirname
+from os.path import join, exists
 from collections import defaultdict
 from data.base_dataset import BaseDataset
 from data.image_folder import make_dataset
@@ -54,20 +54,22 @@ class FashionDataset(BaseDataset):
         vname = opt.demo_video_name
         vroot = 'demo_videos'
         image_dir = join(vroot, vname)
-        source_bone_list = join(root, 'fasion-annotation-test.csv')
+        subfolder = "test" if exists(join(root, "test", sname)) else "train"
+        
+        source_bone_list = join(root, f'fasion-annotation-{subfolder}.csv')
         demo_bone_list = join(vroot, vname, f'{vname}.csv')
         # find and append source image bone to the video bone list
         with open(source_bone_list) as f1:
             for line in f1:
                 if line.startswith(sname):
-                    source_bone = line
-                    print(source_bone)
-                    with open(demo_bone_list, "a") as f2:
-                        f2.write(source_bone)
+                    source_bone = line                    
+                    with open(demo_bone_list, "r+") as f2:
+                        if f2.readlines()[-1] != source_bone:
+                            f2.write(source_bone)
                     break
-        par_dir = join(root, 'testSPL8')
+        par_dir = join(root, f'{subfolder}SPL8')
         # move source image to demo images root
-        old_A = join(root, "test", sname)
+        old_A = join(root, subfolder, sname)
         A = join(image_dir, sname)
         copyfile(old_A, A)
         name_pairs = [[sname, B] for B in listdir(image_dir) if B.startswith("frame")]
