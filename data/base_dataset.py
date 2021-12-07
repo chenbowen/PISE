@@ -66,6 +66,7 @@ class BaseDataset(data.Dataset):
         P1_img = Image.open(P1_path).convert('RGB')#.crop(regions)
         P2_img = Image.open(P2_path).convert('RGB')#.crop(regions)
         SPL1_img = Image.open(SPL1_path)#.crop(regions)
+        print(np.array(SPL1_img).shape)
         if os.path.exists(SPL2_path):
             SPL2_img = Image.open(SPL2_path)#.crop(regions)
         else:
