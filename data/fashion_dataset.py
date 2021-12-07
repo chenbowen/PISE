@@ -70,7 +70,7 @@ class FashionDataset(BaseDataset):
         old_A = join(root, "test", sname)
         A = join(image_dir, sname)
         copyfile(old_A, A)
-        name_pairs = [[A, B] for B in listdir(image_dir) if B.startswith("frame")]
+        name_pairs = [[sname, B] for B in listdir(image_dir) if B.startswith("frame")]
         print(name_pairs[:20])
         
         return image_dir, demo_bone_list, name_pairs, par_dir
