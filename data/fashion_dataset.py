@@ -52,7 +52,7 @@ class FashionDataset(BaseDataset):
         root = opt.dataroot
         sname = opt.demo_source_image
         vname = opt.demo_video_name
-        vroot = join(dirname(root), 'demo_videos')
+        vroot = 'demo_videos'
         image_dir = join(vroot, vname)
         source_bone_list = join(root, 'fasion-annotation-test.csv')
         demo_bone_list = join(vroot, vname, f'{vname}.csv')
