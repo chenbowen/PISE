@@ -8,19 +8,24 @@ The code for our CVPR paper [PISE: Person Image Synthesis and Editing with Decou
    - ### Online training pairs sampling 
        - #### Random sampling trianing pairs instead of loading fixed pairs from predetermined training csv files. For any sampled training pair (A, B), the appearances are the same (actor & cloth). However in iPER, each actor with same cloth has two different videos: random pose & fixed pose with varying azimuthal angles. Therefore, a training pair can be sampled from two different videos.
    - ### Testing on iPER dataset
-   - ### Testing with different csv pair files, saving results automatically with corresponding names
+   - ### Testing with different csv image pair files, saving results automatically with corresponding names
+   - ### `demo.py`: A separate demo pipline. 
+      - #### Given any input video, bone poses and an source image, output an pose transfered video
+      - #### Modified dataset setup process so that it doesn't require segmentations from demo video images
+      - #### Generating testing image pairs on the fly to eliminate the need for preconfigured csv pair files.
    - ### Offline reorganizing datasets (deepfashion, iPER) for faster data loading 
    - ### Saving visualization triple (ref, output, gt)
    - ### Support training with png images
 - ## Resolved issues from original code:
-   - ### deprecated `fill` argument in F.affine()
+   - ### incorrect loading pretrained vgg19 from author's local machine
    - ### deprecated usage of `.cuda(, async=True)`
    - ### incorrect `--store_input` default value for visualization
-   - ### incorrect loading pretrained vgg19 from author's local machine
+   - ### removed default `batch_size=1` during testing for faster inference 
+   - ### deprecated `fill` argument in F.affine()
 
 - ## Code cleaning
-   - ### Cleaned over 130+ lines of redundent or unnecessary code
-   - ### Renaming some variable names for better readability
+   - ### Cleaned over 150+ lines of redundent or unnecessary code including some core modules such as **self-attention**.
+   - ### Variables renaming for better readability
 
 # Requirement
 

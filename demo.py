@@ -1,4 +1,4 @@
-from options.test_options import TestOptions
+from options.demo_options import DemoOptions
 import data as Dataset
 from model import create_model
 from util import visualizer
@@ -7,13 +7,13 @@ import numpy as np
 import torch
 
 if __name__=='__main__':
-    # get testing options
-    opt = TestOptions().parse()
+    # get demo options
+    opt = DemoOptions().parse()
     # creat a dataset
     dataset = Dataset.create_dataloader(opt)
 
     dataset_size = len(dataset) * opt.batchSize
-    print('testing images = %d' % dataset_size)
+    print('Running demo pipeline...')
     # create a model
     model = create_model(opt)
 
