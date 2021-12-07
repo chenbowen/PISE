@@ -1,4 +1,5 @@
 import os
+from torch._C import int8
 import torch.utils.data as data
 from PIL import Image
 import torchvision.transforms as transforms
@@ -68,7 +69,7 @@ class BaseDataset(data.Dataset):
         if os.path.exists(SPL2_path):
             SPL2_img = Image.open(SPL2_path)#.crop(regions)
         else:
-            SPL2_img = Image.new('RGB', self.load_size)
+            SPL2_img = np.zeros(self.load_size + [3], int8)
         
         if np.array(P1_img).shape[1]==176:
             tmp = np.ones([256, 40, 3])*255
